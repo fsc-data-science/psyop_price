@@ -1,0 +1,64 @@
+---
+title: "PSYOP Price Forecast"
+author: "Charliemarketplac "
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    css: "styles.css"
+    includes:
+      in_header: header.html
+    code_folding: hide
+    toc: true
+    toc_float: true
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r, warning=FALSE, message=FALSE}
+library(plotly)
+library(forecast)
+library(reactable)
+library(dplyr)
+```
+
+# Intro
+
+PSYOP token is a meme coin developed by ben.eth. This report forecasts price action 
+using the query from cryptoedgar's dashboard: https://flipsidecrypto.xyz/crypto_edgar/q/2023-05-19-08-08-pm-fGdof5
+
+
+# Data 
+
+A snapshot of the data was downloaded and is provided as a csv in this repo.
+It has HOUR, VOLUME, and PSYOP_PRICE (in USD). 
+
+```{r}
+
+psyop <- read.csv("psyop-swap-action.csv")
+psyop <- psyop[-87, ]
+psyop <- psyop[order(psyop$HOUR, decreasing = FALSE), ]
+psyop$HOUR <- as.POSIXct(psyop$HOUR, tz = "UTC")
+reactable(head(psyop))
+```
+
+
+# Plot 
+
+```{r}
+plot_ly(data = psyop, x = ~HOUR, y = ~PSYOPS_PRICE, size = ~VOLUME,
+        type = "scatter", mode = "markers+lines")
+
+```
+
+# Forecast 
+
+Using auto-arima to forecast the price. 
+
+```{r}
+price_arima <- auto.arima(y = psyop$PSYOPS_PRICE)
+price_forecast <- forecast(price_arima, h = 48)
+plot(price_forecast)
+```
+
+With this huge margin of error we surely cover future price action somewhere here over the next 48 hours. 
+
